@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🛡 Suraksha Yatra - Blockchain Tourist Security</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Add Leaflet for maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1e40af',
+            secondary: '#3b82f6',
+            accent: '#ef4444',
+            dark: '#1f2937',
+            light: '#f8fafc'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      min-height: 100vh;
+    }
+    .page {
+      display: none;
+    }
+    .page.active {
+      display: block;
+    }
+    .card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+      color: white;
+      border-radius: 12px;
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    }
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    .emergency-btn {
+      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    }
+    .safety-alert {
+      border-left: 4px solid #ef4444;
+    }
+    #map {
+      height: 400px;
+      width: 100%;
+      border-radius: 12px;
+    }
+    .nav-tab {
+      padding: 12px 20px;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      background: #dbeafe;
+      margin-right: 4px;
+    }
+    .nav-tab.active {
+      background: #1e40af;
+      color: white;
+    }
+    .input-error {
+      border-color: #ef4444;
+    }
+    .error-message {
+      color: #ef4444;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body class="font-sans">
+  <!-- Navbar -->
+  <nav class="gradient-bg text-white px-6 py-4 shadow-lg">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="bg-white/20 p-2 rounded-full">
+          <i class="fas fa-shield-alt text-2xl"></i>
+        </div>
+        <h1 class="text-2xl font-bold">Suraksha Yatra Blockchain</h1>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span class="hidden md:inline-block"><i class="fas fa-user-circle mr-2"></i>Tourist Dashboard</span>
+        <button class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Navigation Tabs -->
+  <div class="max-w-7xl mx-auto px-4 pt-6 flex">
+    <div class="nav-tab active" onclick="showPage('dashboard')">
+      <i class="fas fa-home mr-2"></i> Dashboard
+    </div>
+    <div class="nav-tab" onclick="showPage('tracking')">
+      <i class="fas fa-map-marker-alt mr-2"></i> Live Tracking
+    </div>
+    <div class="nav-tab" onclick="showPage('safety')">
+      <i class="fas fa-exclamation-triangle mr-2"></i> Safety Alerts
+    </div>
+  </div>
+
+  <!-- Dashboard Page -->
+  <div id="dashboard" class="page active">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <!-- Dashboard Header -->
+      <div class="mb-8">
+        <h2 class="text-3xl font-bold text-dark mb-2">Tourist Security Dashboard</h2>
+        <p class="text-gray-600">Monitor, register and assist tourists with blockchain-powered security</p>
+      </div>
+
+      <!-- Stats Overview -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="stat-card p-5 flex items-center justify-between">
+          <div>
+            <p class="text-sm">Registered Tourists</p>
+            <p class="text-2xl font-bold">1,248</p>
+          </div>
+          <i class="fas fa-users text-3xl opacity-80"></i>
+        </div>
+        <div class="stat-card p-5 flex items-center justify-between">
+          <div>
+            <p class="text-sm">Emergencies Today</p>
+            <p class="text-2xl font-bold">3</p>
+          </div>
+          <i class="fas fa-bell text-3xl opacity-80"></i>
+        </div>
+        <div class="stat-card p-5 flex items-center justify-between">
+          <div>
+            <p class="text-sm">Verified Today</p>
+            <p class="text-2xl font-bold">42</p>
+          </div>
+          <i class="fas fa-check-circle text-3xl opacity-80"></i>
+        </div>
+        <div class="stat-card p-5 flex items-center justify-between">
+          <div>
+            <p class="text-sm">Block Height</p>
+            <p class="text-2xl font-bold">8,472</p>
+          </div>
+          <i class="fas fa-link text-3xl opacity-80"></i>
+        </div>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Register Tourist Card -->
+          <div class="bg-white shadow-lg rounded-xl overflow-hidden card">
+            <div class="bg-primary text-white px-6 py-3 flex justify-between items-center">
+              <h2 class="text-xl font-semibold"><i class="fas fa-user-plus mr-2"></i>Register Tourist</h2>
+              <span class="bg-white/20 text-xs px-2 py-1 rounded-full">Secure Identity</span>
+            </div>
+            <div class="p-6 space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <input id="name" type="text" placeholder="Enter full name"
+                         class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
+                  <div id="name-error" class="error-message hidden">Name is required</div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Aadhaar Number</label>
+                  <input id="aadhaar" type="text" placeholder="12-digit Aadhaar" maxlength="12"
+                         class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
+                  <div id="aadhaar-error" class="error-message hidden">Aadhaar must be 12 digits</div>
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                  <input id="phone" type="text" placeholder="With country code"
+                         class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
+                  <div id="phone-error" class="error-message hidden">Valid phone number is required</div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Nationality</label>
+                  <select id="nationality" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                    <option value="Indian">Indian</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contacts</label>
+                <div class="space-y-2">
+                  <input id="emergencyName" type="text" placeholder="Contact Name" class="w-full p-3 border rounded-lg">
+                  <input id="emergencyPhone" type="text" placeholder="Contact Phone" class="w-full p-3 border rounded-lg">
+                </div>
+              </div>
+              
+              <button onclick="registerTourist()"
+                      class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-800 transition flex items-center justify-center">
+                <i class="fas fa-link mr-2"></i> Register on Blockchain
+              </button>
+              
+              <div id="registerResult" class="mt-4 hidden p-3 rounded"></div>
+            </div>
+          </div>
+
+          <!-- Emergency Alert Card -->
+          <div class="bg-white shadow-lg rounded-xl overflow-hidden card">
+            <div class="bg-accent text-white px-6 py-3 flex justify-between items-center">
+              <h2 class="text-xl font-semibold"><i class="fas fa-exclamation-triangle mr-2"></i>Emergency Alert</h2>
+              <span class="bg-white/20 text-xs px-2 py-1 rounded-full pulse">High Priority</span>
+            </div>
+            <div class="p-6 space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Identity Hash</label>
+                <input id="emergencyHash" type="text" placeholder="Enter tourist identity hash"
+                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400" />
+                <div id="emergencyHash-error" class="error-message hidden">Identity hash is required</div>
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Type</label>
+                  <select id="emergencyType"
+                          class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400">
+                    <option value="MEDICAL">Medical Emergency</option>
+                    <option value="THEFT">Theft</option>
+                    <option value="HARASSMENT">Harassment</option>
+                    <option value="ACCIDENT">Accident</option>
+                    <option value="LOST">Lost Person</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                  <div class="flex space-x-2">
+                    <input id="emergencyLat" type="text" placeholder="Latitude" class="w-full p-3 border rounded-lg">
+                    <input id="emergencyLng" type="text" placeholder="Longitude" class="w-full p-3 border rounded-lg">
+                  </div>
+                  <button onclick="getCurrentLocation()" class="mt-2 text-sm text-blue-600 flex items-center">
+                    <i class="fas fa-location-arrow mr-1"></i> Use my current location
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Description</label>
+                <textarea id="emergencyDesc" placeholder="Describe the emergency in detail..."
+                          class="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400" rows="3"></textarea>
+                <div id="emergencyDesc-error" class="error-message hidden">Description is required</div>
+              </div>
+              
+              <button onclick="recordEmergency()"
+                      class="emergency-btn w-full text-white py-3 rounded-lg text-lg font-bold transition flex items-center justify-center">
+                <i class="fas fa-bell mr-2"></i> RECORD EMERGENCY ON BLOCKCHAIN
+              </button>
+              
+              <div id="emergencyResult" class="mt-4 hidden p-3 rounded"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="space-y-6">
+          <!-- Verify Tourist Card -->
+          <div class="bg-white shadow-lg rounded-xl overflow-hidden card">
+            <div class="bg-indigo-700 text-white px-6 py-3">
+              <h2 class="text-xl font-semibold"><i class="fas fa-search mr-2"></i>Verify Tourist</h2>
+            </div>
+            <div class="p-6 space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Identity Hash</label>
+                <input id="verifyHash" type="text" placeholder="Enter identity hash to verify"
+                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400" />
+                <div id="verifyHash-error" class="error-message hidden">Identity hash is required</div>
+              </div>
+              
+              <button onclick="verifyTourist()"
+                      class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center">
+                <i class="fas fa-qrcode mr-2"></i> Verify Identity
+              </button>
+              
+              <div class="mt-4 p-4 bg-gray-100 rounded-lg hidden" id="verificationDetails">
+                <h3 class="font-semibold text-lg mb-2">Verification Details</h3>
+                <div class="space-y-2">
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Name:</span>
+                    <span class="font-medium" id="v-name">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Status:</span>
+                    <span class="font-medium text-green-600" id="v-status">Verified</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Registered:</span>
+                    <span class="font-medium" id="v-date">2023-10-15</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Block:</span>
+                    <span class="font-medium" id="v-block">#4278</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div id="verifyResult" class="mt-4 hidden p-3 rounded"></div>
+            </div>
+          </div>
+
+          <!-- Blockchain Stats Card -->
+          <div class="bg-white shadow-lg rounded-xl overflow-hidden card">
+            <div class="bg-dark text-white px-6 py-3 flex justify-between items-center">
+              <h2 class="text-xl font-semibold"><i class="fas fa-chart-bar mr-2"></i>Blockchain Stats</h2>
+              <button onclick="getStats()" class="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded">
+                Refresh
+              </button>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <div class="bg-blue-100 p-2 rounded-lg">
+                      <i class="fas fa-cube text-blue-600"></i>
+                    </div>
+                    <div class="ml-3">
+                      <p class="text-sm text-gray-600">Block Height</p>
+                      <p class="font-semibold">8,472</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm text-gray-600">Hash Rate</p>
+                    <p class="font-semibold">124 TH/s</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <div class="bg-green-100 p-2 rounded-lg">
+                      <i class="fas fa-users text-green-600"></i>
+                    </div>
+                    <div class="ml-3">
+                      <p class="text-sm text-gray-600">Tourists</p>
+                      <p class="font-semibold">1,248</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm text-gray-600">Today</p>
+                    <p class="font-semibold">+24</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <div class="bg-red-100 p-2 rounded-lg">
+                      <i class="fas fa-bell text-red-600"></i>
+                    </div>
+                    <div class="ml-3">
+                      <p class="text-sm text-gray-600">Emergencies</p>
+                      <p class="font-semibold">86</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm text-gray-600">Today</p>
+                    <p class="font-semibold">3</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="mt-6 pt-4 border-t">
+                <button onclick="getStats()"
+                        class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 rounded-lg transition flex items-center justify-center">
+                  <i class="fas fa-sync-alt mr-2"></i> Refresh Full Stats
+                </button>
+              </div>
+              
+              <div id="statsResult" class="mt-4 hidden bg-gray-100 p-3 rounded overflow-auto text-sm"></div>
+            </div>
+          </div>
+
+          <!-- Quick Actions Card -->
+          <div class="bg-white shadow-lg rounded-xl overflow-hidden card">
+            <div class="bg-green-700 text-white px-6 py-3">
+              <h2 class="text-xl font-semibold"><i class="fas fa-bolt mr-2"></i>Quick Actions</h2>
+            </div>
+            <div class="p-6 grid grid-cols-2 gap-3">
+              <button class="bg-blue-100 hover:bg-blue-200 text-blue-700 p-3 rounded-lg flex flex-col items-center justify-center">
+                <i class="fas fa-qrcode text-xl mb-2"></i>
+                <span class="text-sm">Scan QR</span>
+              </button>
+              <button class="bg-green-100 hover:bg-green-200 text-green-700 p-3 rounded-lg flex flex-col items-center justify-center">
+                <i class="fas fa-list text-xl mb-2"></i>
+                <span class="text-sm">All Records</span>
+              </button>
+              <button class="bg-purple-100 hover:bg-purple-200 text-purple-700 p-3 rounded-lg flex flex-col items-center justify-center" onclick="showPage('tracking')">
+                <i class="fas fa-map-marker-alt text-xl mb-2"></i>
+                <span class="text-sm">Track</span>
+              </button>
+              <button class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 p-3 rounded-lg flex flex-col items-center justify-center">
+                <i class="fas fa-file-export text-xl mb-2"></i>
+                <span class="text-sm">Export</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tracking Page -->
+  <div id="tracking" class="page">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <h2 class="text-3xl font-bold text-dark mb-6">Live Tourist Tracking</h2>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+          <div class="bg-white shadow-lg rounded-xl overflow-hidden card p-4">
+            <h3 class="text-xl font-semibold mb-4"><i class="fas fa-map-marked-alt mr-2"></i>Real-time Location</h3>
+            <div id="map"></div>
+            <div class="mt-4 grid grid-cols-2 gap-4">
+              <div class="bg-blue-50 p-3 rounded-lg">
+                <p class="text-sm text-blue-600">Current Location</p>
+                <p class="font-semibold" id="current-location">Fetching...</p>
+              </div>
+              <div class="bg-green-50 p-3 rounded-lg">
+                <p class="text-sm text-green-600">Last Updated</p>
+                <p class="font-semibold" id="last-updated">Just now</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="space-y-6">
+          <div class="bg-white shadow-lg rounded-xl overflow-hidden card">
+            <div class="bg-primary text-white px-6 py-3">
+              <h3 class="text-xl font-semibold"><i class="fas fa-user-check mr-2"></i>Tourist Info</h3>
+            </div>
+            <div class="p-6">
+              <div class="flex items-center mb-4">
+                <div class="bg-blue-100 p-3 rounded-full">
+                  <i class="fas fa-user text-blue-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                  <p class="font-semibold">Rajesh Kumar</p>
+                  <p class="text-sm text-gray-500">ID: TOUR-7X9B2C</p>
+                </div>
+              </div>
+              
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Status:</span>
+                  <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Active</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Phone:</span>
+                  <span class="font-medium">+91 98765 43210</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Nationality:</span>
+                  <span class="font-medium">Indian</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Registered:</span>
+                  <span class="font-medium">15 Oct 2023</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white shadow-lg rounded-xl overflow-hidden card">
+            <div class="bg-purple-700 text-white px-6 py-3">
+              <h3 class="text-xl font-semibold"><i class="fas fa-route mr-2"></i>Travel History</h3>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4">
+                <div class="flex items-start">
+                  <div class="bg-purple-100 p-2 rounded-full mt-1">
+                    <i class="fas fa-map-marker-alt text-purple-600"></i>
+                  </div>
+                  <div class="ml-3">
+                    <p class="font-semibold">Guwahati Airport</p>
+                    <p class="text-sm text-gray-500">Today, 09:30 AM</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-start">
+                  <div class="bg-purple-100 p-2 rounded-full mt-1">
+                    <i class="fas fa-map-marker-alt text-purple-600"></i>
+                  </div>
+                  <div class="ml-3">
+                    <p class="font-semibold">Kamakhya Temple</p>
+                    <p class="text-sm text-gray-500">Today, 11:45 AM</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-start">
+                  <div class="bg-purple-100 p-2 rounded-full mt-1">
+                    <i class="fas fa-map-marker-alt text-purple-600"></i>
+                  </div>
+                  <div class="ml-3">
+                    <p class="font-semibold">Pobitora Wildlife Sanctuary</p>
+                    <p class="text-sm text-gray-500">Today, 02:15 PM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Safety Alerts Page -->
+  <div id="safety" class="page">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <h2 class="text-3xl font-bold text-dark mb-6">Safety Monitoring & Alerts</h2>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-6">
+          <div class="bg-white shadow-lg rounded-xl overflow-hidden card">
+            <div class="bg-red-600 text-white px-6 py-3 flex justify-between items-center">
+              <h3 class="text-xl font-semibold"><i class="fas fa-exclamation-circle mr-2"></i>Active Alerts</h3>
+              <span class="bg-white/20 text-xs px-2 py-1 rounded-full">2 New</span>
+            </div>
+            <div class="p-6">
+              <div class="safety-alert bg-red-50 p-4 mb-4 rounded-r-lg">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h4 class="font-semibold text-red-700">High Risk Area Alert</h4>
+                    <p class="text-sm">You are entering a high risk zone with increased theft incidents</p>
+                  </div>
+                  <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">Now</span>
+                </div>
+                <div class="mt-3 flex items-center text-sm text-red-600">
+                  <i class="fas fa-map-marker-alt mr-2"></i>
+                  <span>Near Fancy Bazaar, Guwahati</span>
+                </div>
+              </div>
+              
+              <div class="safety-alert bg-yellow-50 p-4 mb-4 rounded-r-lg">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h4 class="font-semibold text-yellow-700">Night Travel Advisory</h4>
+                    <p class="text-sm">You are travelling in a remote area after dark. Please verify your safety.</p>
+                  </div>
+                  <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">10 min ago</span>
+                </div>
+                <div class="mt-3 flex items-center text-sm text-yellow-600">
+                  <i class="fas fa-map-marker-alt mr-2"></i>
+                  <span>NH27, Near Sonapur</span>
+                </div>
+                <div class="mt-3">
+                  <button class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm mr-2">
+                    <i class="fas fa-check-circle mr-1"></i> I'm Safe
+                  </button>
+                  <button class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm">
+                    <i class="fas fa-bell mr-1"></i> Request Help
+                  </button>
+                </div>
+              </div>
+              
+              <div class="safety-alert bg-green-50 p-4 rounded-r-lg">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h4 class="font-semibold text-green-700">Safety Check Passed</h4>
+                    <p class="text-sm">You have successfully verified your safety with local authorities</p>
+                  </div>
+                  <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Resolved</span>
+                </div>
+                <div class="mt-3 flex items-center text-sm text-green-600">
+                  <i class="fas fa-map-marker-alt mr-2"></i>
+                  <span>Pandu Port Area, Guwahati</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white shadow-lg rounded-xl overflow-hidden card">
+            <div class="bg-blue-600 text-white px-6 py-3">
+              <h3 class="text-xl font-semibold"><i class="fas fa-shield-alt mr-2"></i>Safety Recommendations</h3>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4">
+                <div class="flex items-start">
+                  <div class="bg-blue-100 p-2 rounded-full mt-1">
+                    <i class="fas fa-info-circle text-blue-600"></i>
+                  </div>
+                  <div class="ml-3">
+                    <p class="font-semibold">Avoid isolated areas after dark</p>
+                    <p class="text-sm text-gray-600">Stick to well-lit and populated areas during nighttime</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-start">
+                  <div class="bg-blue-100 p-2 rounded-full mt-1">
+                    <i class="fas fa-info-circle text-blue-600"></i>
+                  </div>
+                  <div class="ml-3">
+                    <p class="font-semibold">Keep emergency contacts updated</p>
+                    <p class="text-sm text-gray-600">Ensure your emergency contacts are current and accessible</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-start">
+                  <div class="bg-blue-100 p-2 rounded-full mt-1">
+                    <i class="fas fa-info-circle text-blue-600"></i>
+                  </div>
+                  <div class="ml-3">
+                    <p class="font-semibold">Verify with locals in unfamiliar areas</p>
+                    <p class="text-sm text-gray-600">When entering new locations, check with local authorities</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-start">
+                  <div class="bg-blue-100 p-2 rounded-full mt-1">
+                    <i class="fas fa-info-circle text-blue-600"></i>
+                  </div>
+                  <div class="ml-3">
+                    <p class="font-semibold">Share your itinerary with trusted contacts</p>
+                    <p class="text-sm text-gray-600">Keep someone informed about your travel plans</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="space-y-6">
+          <div class="bg-white shadow-lg rounded-xl overflow-hidden card">
+            <div class="bg-purple-700 text-white px-6 py-3">
+              <h3 class="text-xl font-semibold"><i class="fas fa-map-marked mr-2"></i>Risk Zones</h3>
+            </div>
+            <div class="p-6">
+              <div class="mb-4">
+                <h4 class="font-semibold mb-2">Current Risk Assessment</h4>
+                <div class="bg-gray-100 rounded-full h-4">
+                  <div class="bg-yellow-500 h-4 rounded-full" style="width: 65%"></div>
+                </div>
+                <div class="flex justify-between text-xs mt-1">
+                  <span>Low</span>
+                  <span>Medium</span>
+                  <span>High</span>
+                </div>
+              </div>
+              
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Theft Risk:</span>
+                  <span class="font-medium text-yellow-600">Medium</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Medical Facilities:</span>
+                  <span class="font-medium text-green-600">Good</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Police Presence:</span>
+                  <span class="font-medium text-green-600">Adequate</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Transport Safety:</span>
+                  <span class="font-medium text-yellow-600">Moderate</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white shadow-lg rounded-xl overflow-hidden card">
+            <div class="bg-green-700 text-white px-6 py-3">
+              <h3 class="text-xl font-semibold"><i class="fas fa-phone-alt mr-2"></i>Emergency Contacts</h3>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="font-semibold">Local Police</p>
+                    <p class="text-sm text-gray-600">Guwahati Central</p>
+                  </div>
+                  <span class="font-medium">+91 361 254 1234</span>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="font-semibold">Tourist Police</p>
+                    <p class="text-sm text-gray-600">24/7 Helpline</p>
+                  </div>
+                  <span class="font-medium">1363</span>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="font-semibold">Medical Emergency</p>
+                    <p class="text-sm text-gray-600">GMCH Hospital</p>
+                  </div>
+                  <span class="font-medium">108</span>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="font-semibold">Suraksha Yatra Support</p>
+                    <p class="text-sm text-gray-600">24/7 Blockchain Support</p>
+                  </div>
+                  <span class="font-medium">+91 971 234 5678</span>
+                </div>
+              </div>
+              
+              <div class="mt-6 pt-4 border-t">
+                <button class="w-full bg-red-600 text-white py-2 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-bell mr-2"></i> Trigger Emergency Alert
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// API Configuration
+const API_BASE_URL = 'http://localhost:3000/api';
+
+// Global variables for tracking
+let currentTouristId = 'T001'; // This would normally come from user session
+let trackingInterval = null;
+let map, touristMarker;
+
+// Utility Functions
+function showLoading(buttonId) {
+  const button = document.getElementById(buttonId);
+  if (button) {
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+  }
+}
+
+function hideLoading(buttonId, originalContent) {
+  const button = document.getElementById(buttonId);
+  if (button) {
+    button.disabled = false;
+    button.innerHTML = originalContent;
+  }
+}
+
+function showResult(elementId, message, isSuccess = true) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    element.classList.remove('hidden');
+    element.className = `mt-4 p-3 rounded ${isSuccess ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+    element.innerHTML = `
+      <i class="fas ${isSuccess ? 'fa-check-circle' : 'fa-exclamation-triangle'} mr-2"></i>
+      ${message}
+    `;
+    element.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+// API Helper Function
+async function callApi(endpoint, options = {}) {
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      },
+      ...options
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || `API error: ${response.status}`);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('API call failed:', error);
+    throw error;
+  }
+}
+
+// Form Validation Functions
+function validateAadhaar(aadhaar) {
+  return /^\d{12}$/.test(aadhaar);
+}
+
+function validatePhone(phone) {
+  return /^[+]\d{1,3}[-\s]?\d{6,15}$/.test(phone);
+}
+
+// Tourist Registration Function
+async function registerTourist() {
+  // Reset errors
+  document.querySelectorAll('.error-message').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+  
+  const name = document.getElementById('name').value.trim();
+  const aadhaar = document.getElementById('aadhaar').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const nationality = document.getElementById('nationality').value;
+  const emergencyName = document.getElementById('emergencyName').value.trim();
+  const emergencyPhone = document.getElementById('emergencyPhone').value.trim();
+  
+  let isValid = true;
+  
+  // Validation
+  if (!name) {
+    document.getElementById('name-error').classList.remove('hidden');
+    document.getElementById('name').classList.add('input-error');
+    isValid = false;
+  }
+  
+  if (!validateAadhaar(aadhaar)) {
+    document.getElementById('aadhaar-error').classList.remove('hidden');
+    document.getElementById('aadhaar').classList.add('input-error');
+    isValid = false;
+  }
+  
+  if (!validatePhone(phone)) {
+    document.getElementById('phone-error').classList.remove('hidden');
+    document.getElementById('phone').classList.add('input-error');
+    isValid = false;
+  }
+  
+  if (!isValid) return;
+  
+  // Show loading
+  const button = document.querySelector('button[onclick="registerTourist()"]');
+  const originalText = button.innerHTML;
+  button.disabled = true;
+  button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Registering...';
+  
+  try {
+    const emergencyContacts = [];
+    if (emergencyName && emergencyPhone) {
+      emergencyContacts.push({ name: emergencyName, phone: emergencyPhone });
+    }
+    
+    const response = await callApi('/registerTourist', {
+      method: 'POST',
+      body: JSON.stringify({
+        name,
+        aadhaar,
+        phone,
+        nationality,
+        emergencyContacts
+      })
+    });
+    
+    if (response.success) {
+      showResult('registerResult', 
+        `<strong>Success!</strong> Tourist registered on blockchain with hash: 
+         <code class="text-xs">${response.data.blockchainHash}</code>
+         ${response.data.transactionHash ? `<br>Transaction: <code class="text-xs">${response.data.transactionHash}</code>` : ''}`);
+      
+      // Clear form
+      document.getElementById('name').value = '';
+      document.getElementById('aadhaar').value = '';
+      document.getElementById('phone').value = '';
+      document.getElementById('emergencyName').value = '';
+      document.getElementById('emergencyPhone').value = '';
+      
+      // Update currentTouristId for tracking
+      currentTouristId = response.data.touristId;
+      
+      // Refresh stats
+      await getStats();
+    }
+  } catch (error) {
+    showResult('registerResult', `<strong>Registration Failed:</strong> ${error.message}`, false);
+  } finally {
+    button.disabled = false;
+    button.innerHTML = originalText;
+  }
+}
+
+// Emergency Recording Function
+async function recordEmergency() {
+  // Reset errors
+  document.querySelectorAll('.error-message').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+  
+  const hash = document.getElementById('emergencyHash').value.trim();
+  const type = document.getElementById('emergencyType').value;
+  const lat = parseFloat(document.getElementById('emergencyLat').value);
+  const lng = parseFloat(document.getElementById('emergencyLng').value);
+  const desc = document.getElementById('emergencyDesc').value.trim();
+  
+  let isValid = true;
+  
+  // Validation
+  if (!hash) {
+    document.getElementById('emergencyHash-error').classList.remove('hidden');
+    document.getElementById('emergencyHash').classList.add('input-error');
+    isValid = false;
+  }
+  
+  if (!desc) {
+    document.getElementById('emergencyDesc-error').classList.remove('hidden');
+    document.getElementById('emergencyDesc').classList.add('input-error');
+    isValid = false;
+  }
+  
+  if (!isValid) return;
+  
+  // Show loading
+  const button = document.querySelector('button[onclick="recordEmergency()"]');
+  const originalText = button.innerHTML;
+  button.disabled = true;
+  button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>RECORDING EMERGENCY...';
+  
+  try {
+    const location = {
+      lat: lat || 26.1445, // Default to Guwahati if no location
+      lng: lng || 91.7362
+    };
+    
+    const response = await callApi('/recordEmergency', {
+      method: 'POST',
+      body: JSON.stringify({
+        touristHash: hash,
+        emergencyType: type,
+        location,
+        description: desc
+      })
+    });
+    
+    if (response.success) {
+      showResult('emergencyResult', 
+        `<strong>Emergency Recorded!</strong> Alert has been broadcast to authorities and emergency contacts.
+         <br>Emergency ID: <code class="text-xs">${response.data.emergencyId}</code>
+         ${response.data.transactionHash ? `<br>Transaction: <code class="text-xs">${response.data.transactionHash}</code>` : ''}
+         ${response.data.safetyAlert ? `<br><strong>Safety Alert:</strong> ${response.data.safetyAlert}` : ''}`);
+      
+      // Clear form
+      document.getElementById('emergencyHash').value = '';
+      document.getElementById('emergencyDesc').value = '';
+      document.getElementById('emergencyLat').value = '';
+      document.getElementById('emergencyLng').value = '';
+      
+      // Refresh stats
+      await getStats();
+    }
+  } catch (error) {
+    showResult('emergencyResult', `<strong>Emergency Recording Failed:</strong> ${error.message}`, false);
+  } finally {
+    button.disabled = false;
+    button.innerHTML = originalText;
+  }
+}
+
+// Tourist Verification Function
+async function verifyTourist() {
+  // Reset errors
+  document.querySelectorAll('.error-message').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+  
+  const hash = document.getElementById('verifyHash').value.trim();
+  
+  if (!hash) {
+    document.getElementById('verifyHash-error').classList.remove('hidden');
+    document.getElementById('verifyHash').classList.add('input-error');
+    return;
+  }
+  
+  // Show loading
+  const button = document.querySelector('button[onclick="verifyTourist()"]');
+  const originalText = button.innerHTML;
+  button.disabled = true;
+  button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verifying...';
+  
+  try {
+    const response = await callApi(`/verifyTourist/${hash}`);
+    
+    if (response.success) {
+      const data = response.data;
+      
+      // Show verification details
+      const detailsDiv = document.getElementById('verificationDetails');
+      detailsDiv.classList.remove('hidden');
+      
+      document.getElementById('v-name').textContent = data.name;
+      document.getElementById('v-status').textContent = data.isActive ? 'Verified' : 'Inactive';
+      document.getElementById('v-status').className = `font-medium ${data.isActive ? 'text-green-600' : 'text-red-600'}`;
+      document.getElementById('v-date').textContent = new Date(data.registrationTime).toLocaleDateString();
+      document.getElementById('v-block').textContent = data.source === 'blockchain' ? 'Blockchain' : 'Database';
+      
+      showResult('verifyResult', 
+        `<strong>Verification Successful!</strong> Tourist identity confirmed.
+         <br>Name: ${data.name} | Nationality: ${data.nationality}
+         <br>Source: ${data.source}`);
+    }
+  } catch (error) {
+    showResult('verifyResult', `<strong>Verification Failed:</strong> ${error.message}`, false);
+    document.getElementById('verificationDetails').classList.add('hidden');
+  } finally {
+    button.disabled = false;
+    button.innerHTML = originalText;
+  }
+}
+
+// Get Statistics Function
+async function getStats() {
+  try {
+    const response = await callApi('/stats');
+    
+    if (response.success) {
+      const data = response.data;
+      
+      // Update dashboard stats
+      const statCards = document.querySelectorAll('.stat-card p.text-2xl');
+      if (statCards.length >= 4) {
+        statCards[0].textContent = data.totalTourists.toLocaleString();
+        statCards[1].textContent = data.emergenciesToday;
+        statCards[2].textContent = data.verifiedToday;
+        statCards[3].textContent = data.blockHeight.toLocaleString();
+      }
+      
+      // Show detailed stats
+      const resultDiv = document.getElementById('statsResult');
+      if (resultDiv) {
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = `
+          <div class="font-mono text-xs">
+            <div class="flex justify-between">
+              <span>Block Height:</span>
+              <span>${data.blockHeight.toLocaleString()}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Total Tourists:</span>
+              <span>${data.totalTourists}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Total Emergencies:</span>
+              <span>${data.totalEmergencies}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Registered Today:</span>
+              <span>${data.verifiedToday}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Emergencies Today:</span>
+              <span>${data.emergenciesToday}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Last Updated:</span>
+              <span>${new Date(data.lastUpdated).toLocaleTimeString()}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Status:</span>
+              <span class="text-green-600">Active</span>
+            </div>
+          </div>
+        `;
+      }
+    }
+  } catch (error) {
+    console.error('Failed to get stats:', error);
+    if (document.getElementById('statsResult')) {
+      showResult('statsResult', `Failed to refresh stats: ${error.message}`, false);
+    }
+  }
+}
+
+// Live Tracking Functions
+function startLiveTracking() {
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported by your browser.");
+    return;
+  }
+
+  const button = document.querySelector('button[onclick="startLiveTracking()"]');
+  if (!button) return;
+  
+  const originalText = button.innerHTML;
+  
+  try {
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Starting...';
+    button.disabled = true;
+
+    // Start tracking
+    trackingInterval = setInterval(async () => {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        // Update map
+        if (touristMarker && map) {
+          touristMarker.setLatLng([lat, lng]);
+          map.setView([lat, lng], 15);
+        }
+
+        // Update location display
+        updateCurrentLocation([lat, lng]);
+
+        try {
+          // Send location to backend
+          const response = await callApi(`/liveLocation/${currentTouristId}`, {
+            method: 'POST',
+            body: JSON.stringify({ lat, lng })
+          });
+
+          if (response.success && response.data.safetyAlert) {
+            // Show safety alert
+            const proceed = confirm(`⚠️ ${response.data.safetyAlert}\n\nAre you safe? Click OK if safe, Cancel to request help.`);
+            if (!proceed) {
+              await sendSOS();
+            }
+          }
+        } catch (error) {
+          console.error('Location update failed:', error);
+        }
+      }, (error) => {
+        console.error('Geolocation error:', error);
+      });
+    }, 5000); // Update every 5 seconds
+
+    button.innerHTML = '<i class="fas fa-stop mr-2"></i> Stop Tracking';
+    button.setAttribute('onclick', 'stopLiveTracking()');
+    
+  } catch (error) {
+    alert('Failed to start tracking: ' + error.message);
+    button.disabled = false;
+    button.innerHTML = originalText;
+  }
+}
+
+function stopLiveTracking() {
+  if (trackingInterval) {
+    clearInterval(trackingInterval);
+    trackingInterval = null;
+  }
+  
+  const button = document.querySelector('button[onclick="stopLiveTracking()"]');
+  if (!button) return;
+  
+  button.innerHTML = '<i class="fas fa-play-circle mr-2"></i> Start Live Tracking';
+  button.setAttribute('onclick', 'startLiveTracking()');
+  button.disabled = false;
+}
+
+// SOS Alert Function
+async function sendSOS() {
+  const button = document.querySelector('button[onclick="sendSOS()"]');
+  if (!button) return;
+  
+  const originalText = button.innerHTML;
+  
+  try {
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Sending SOS...';
+    
+    // Get current location
+    let location = null;
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        location = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+      });
+    }
+    
+    const response = await callApi(`/sendSOS/${currentTouristId}`, {
+      method: 'POST',
+      body: JSON.stringify({ location })
+    });
+    
+    if (response.success) {
+      alert("🚨 SOS Alert Sent Successfully!\n\nHelp is on the way. Emergency contacts have been notified.\n\nEmergency ID: " + response.data.emergencyId);
+    }
+  } catch (error) {
+    alert("❌ Failed to send SOS: " + error.message);
+  } finally {
+    button.disabled = false;
+    button.innerHTML = originalText;
+  }
+}
+
+// Helper function to get current location for emergency form
+function getCurrentLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        document.getElementById('emergencyLat').value = position.coords.latitude.toFixed(6);
+        document.getElementById('emergencyLng').value = position.coords.longitude.toFixed(6);
+      },
+      (error) => {
+        alert('Unable to retrieve your location. Please enter manually.');
+        console.error('Geolocation error:', error);
+      }
+    );
+  } else {
+    alert('Geolocation is not supported by this browser. Please enter manually.');
+  }
+}
+
+// Update current location display
+function updateCurrentLocation(coords) {
+  const locationElement = document.getElementById('current-location');
+  const lastUpdatedElement = document.getElementById('last-updated');
+  
+  if (locationElement) {
+    locationElement.textContent = `Lat: ${coords[0].toFixed(4)}, Lng: ${coords[1].toFixed(4)}`;
+  }
+  
+  if (lastUpdatedElement) {
+    lastUpdatedElement.textContent = new Date().toLocaleTimeString();
+  }
+}
+
+// Logout Function
+async function logout() {
+  if (confirm('Are you sure you want to logout?')) {
+    try {
+      // Stop tracking if active
+      if (trackingInterval) {
+        clearInterval(trackingInterval);
+        trackingInterval = null;
+      }
+      
+      await callApi('/logout', { method: 'POST' });
+      
+      alert('Logout successful. Redirecting to login page.');
+      
+      // In a real app, this would redirect to the login page
+      window.location.href = '/login.html';
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('Logout completed locally.');
+    }
+  }
+}
+
+// Page Navigation
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(page => {
+    page.classList.remove('active');
+  });
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  
+  document.getElementById(pageId).classList.add('active');
+  document.querySelector(`.nav-tab:nth-child(${getTabIndex(pageId)})`).classList.add('active');
+  
+  if (pageId === 'tracking') {
+    initMap();
+  }
+}
+
+function getTabIndex(pageId) {
+  switch(pageId) {
+    case 'dashboard': return 1;
+    case 'tracking': return 2;
+    case 'safety': return 3;
+    default: return 1;
+  }
+}
+
+// Initialize map for tracking page
+function initMap() {
+  if (map) return; // Already initialized
+  
+  map = L.map('map').setView([26.1445, 91.7362], 13); // Guwahati coordinates
+  
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+  
+  // Add a marker for the tourist
+  touristMarker = L.marker([26.1445, 91.7362]).addTo(map)
+    .bindPopup('<b>Current Location</b><br>Tourist ID: ' + currentTouristId + '<br>Status: Active')
+    .openPopup();
+  
+  // Add unsafe zones to the map
+  const unsafeZones = [
+    { name: "High Crime Area", coords: [26.1800, 91.7500], radius: 1000 },
+    { name: "Flood Prone Zone", coords: [26.1600, 91.7700], radius: 1500 },
+    { name: "Remote Area", coords: [26.1200, 91.7900], radius: 2000 }
+  ];
+  
+  unsafeZones.forEach(zone => {
+    L.circle(zone.coords, {
+      color: 'red',
+      fillColor: '#f03',
+      fillOpacity: 0.2,
+      radius: zone.radius
+    }).addTo(map).bindPopup(`<b>${zone.name}</b><br>Risk Zone`);
+  });
+  
+  // Update location info
+  updateCurrentLocation([26.1445, 91.7362]);
+}
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+  // Load initial stats
+  getStats();
+  
+  // Set up periodic stats refresh
+  setInterval(getStats, 60000); // Refresh every minute
+  
+  console.log('🛡 Suraksha Yatra Frontend Initialized');
+  console.log('Backend API:', API_BASE_URL);
+});
+</script>
+
+
+  
+</body>
+</html>
