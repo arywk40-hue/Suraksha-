@@ -1,0 +1,9 @@
+{
+  "tourists": {},
+  "emergencies": {},
+  "system": {
+    "totalTourists": 0,
+    "totalEmergencies": 0,
+    "blockHeight": 0
+  }
+}

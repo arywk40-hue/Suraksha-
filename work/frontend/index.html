@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🛡 Suraksha Yatra - Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <style>
+    body { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); min-height: 100vh; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .card { transition: transform 0.2s; }
+    .card:hover { transform: translateY(-2px); }
+    /* Login Page Styles */
+    .login-container { display: flex; align-items: center; justify-content: center; height: 100vh; }
+  </style>
+</head>
+<body class="font-sans text-gray-800">
+
+  <div id="login-page" class="login-container page active">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="text-center mb-8">
+        <div class="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-800">Suraksha Yatra</h1>
+        <p class="text-gray-500 text-sm">Official Security Portal</p>
+      </div>
+      
+      <form onsubmit="handleLogin(event)">
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Officer ID</label>
+          <input type="text" id="login-id" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="admin" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+          <input type="password" id="login-pass" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="••••••" required>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-300">
+          Secure Login
+        </button>
+      </form>
+      <p id="login-error" class="text-red-500 text-sm text-center mt-4 hidden">Invalid Credentials</p>
+
+      <div class="mt-4 text-center">
+        <div id="firebase-login-area" class="space-y-2">
+          <button id="btn-google" onclick="googleSignIn()" class="w-full bg-white border border-gray-200 text-gray-800 py-2 rounded hover:shadow"> 
+            <i class="fab fa-google mr-2"></i> Sign in with Google
+          </button>
+          <button id="btn-phone" onclick="phoneSignIn()" class="w-full bg-white border border-gray-200 text-gray-800 py-2 rounded hover:shadow"> 
+            <i class="fas fa-sms mr-2"></i> Sign in with Phone (OTP)
+          </button>
+          <div id="recaptcha-container"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-container" class="hidden">
+    <nav class="bg-blue-700 text-white px-6 py-4 shadow-lg">
+      <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+          <i class="fas fa-shield-alt text-2xl"></i>
+          <h1 class="text-xl font-bold">Suraksha Yatra <span class="text-xs bg-blue-500 px-2 py-0.5 rounded ml-2">LIVE</span></h1>
+        </div>
+        <button onclick="logout()" class="text-sm bg-blue-800 hover:bg-blue-900 px-4 py-2 rounded transition">Logout</button>
+      </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 pt-6 flex space-x-2">
+      <button onclick="showTab('dashboard')" class="px-6 py-2 bg-white rounded-t-lg font-medium text-blue-700 shadow-sm nav-btn active" id="btn-dashboard">Dashboard</button>
+      <button onclick="showTab('tracking')" class="px-6 py-2 bg-blue-100 rounded-t-lg font-medium text-gray-600 hover:bg-white transition nav-btn" id="btn-tracking">Live Tracking</button>
+    </div>
+
+    <div class="max-w-7xl mx-auto bg-white min-h-[80vh] shadow-xl rounded-b-lg rounded-tr-lg p-6">
+      
+      <div id="dashboard" class="tab-content block">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+            <p class="text-gray-500 text-sm">Total Tourists</p>
+            <h3 class="text-2xl font-bold text-blue-700" id="stat-tourists">...</h3>
+          </div>
+          <div class="bg-red-50 p-4 rounded-xl border border-red-100">
+            <p class="text-gray-500 text-sm">Emergencies</p>
+            <h3 class="text-2xl font-bold text-red-600" id="stat-emergencies">...</h3>
+          </div>
+          <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+            <p class="text-gray-500 text-sm">System Status</p>
+            <h3 class="text-xl font-bold text-green-600">Active</h3>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+            <p class="text-gray-500 text-sm">Blockchain Height</p>
+            <h3 class="text-2xl font-bold text-gray-700" id="stat-blocks">...</h3>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div class="border rounded-xl p-6 shadow-sm">
+            <h2 class="text-lg font-bold mb-4 flex items-center"><i class="fas fa-user-plus mr-2 text-blue-600"></i> Register New Tourist</h2>
+            <div class="space-y-4">
+              <input type="text" id="reg-name" placeholder="Full Name" class="w-full p-2 border rounded">
+              <input type="text" id="reg-phone" placeholder="Phone (+91...)" class="w-full p-2 border rounded">
+              <input type="text" id="reg-aadhaar" placeholder="Identity Number (Aadhaar/Passport)" class="w-full p-2 border rounded">
+              <button onclick="registerTourist()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-medium">
+                Register on Blockchain
+              </button>
+              <div id="reg-result" class="hidden p-3 bg-green-100 text-green-700 rounded text-sm mt-2"></div>
+            </div>
+          </div>
+
+          <div class="border rounded-xl p-6 shadow-sm">
+            <h2 class="text-lg font-bold mb-4 flex items-center"><i class="fas fa-search mr-2 text-purple-600"></i> Verify Identity</h2>
+            <div class="flex space-x-2 mb-4">
+              <input type="text" id="verify-hash" placeholder="Enter Blockchain Hash" class="flex-1 p-2 border rounded">
+              <button onclick="verifyTourist()" class="bg-purple-600 text-white px-4 rounded hover:bg-purple-700">Verify</button>
+            </div>
+            <div id="verify-result" class="hidden bg-gray-50 p-4 rounded border">
+              </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tracking" class="tab-content hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2">
+            <div id="map" class="h-[400px] w-full rounded-xl z-0 border"></div>
+            <div class="mt-4 flex justify-between items-center bg-gray-50 p-3 rounded">
+              <span class="text-sm text-gray-600">Status: <span id="track-status" class="font-bold">Offline</span></span>
+              <button onclick="toggleTracking()" id="track-btn" class="bg-green-600 text-white px-4 py-2 rounded text-sm">Start Tracking</button>
+            </div>
+          </div>
+          
+          <div class="space-y-4">
+            <div class="bg-white border rounded-xl p-4 shadow-sm">
+              <h3 class="font-bold text-gray-800 mb-2">🤠 AI Risk Assessment</h3>
+              <div id="ai-alert" class="text-sm text-gray-500">
+                Waiting for location data...
+              </div>
+            </div>
+            
+            <div class="bg-white border rounded-xl p-4 shadow-sm h-64 overflow-y-auto">
+              <h3 class="font-bold text-gray-800 mb-2 text-sm">Live Logs</h3>
+              <ul id="log-list" class="space-y-2 text-xs text-gray-600">
+                </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+// --- CONFIGURATION ---
+// IMPORTANT: Point this to your backend URL (changed to match local server)
+const API_URL = 'http://localhost:3000/api'; 
+let currentTouristId = null;
+let trackingInterval = null;
+let map, marker;
+
+// --- AUTHENTICATION ---
+function handleLogin(e) {
+  e.preventDefault();
+  const id = document.getElementById('login-id').value;
+  const pass = document.getElementById('login-pass').value;
+
+  fetch(`${API_URL}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: id, password: pass })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if(data.success) {
+      document.getElementById('login-page').classList.remove('active'); // Hide Login
+      document.getElementById('app-container').classList.remove('hidden'); // Show App
+      fetchStats(); // Load initial data
+    } else {
+      document.getElementById('login-error').classList.remove('hidden');
+    }
+  })
+  .catch(err => alert("Server Error. Ensure Backend is running."));
+}
+
+function logout() {
+  location.reload(); // Simple reload to clear state
+}
+
+// --- DASHBOARD FUNCTIONS ---
+async function fetchStats() {
+  try {
+    const res = await fetch(`${API_URL}/stats`);
+    const data = await res.json();
+    if(data.success) {
+      document.getElementById('stat-tourists').innerText = data.data.totalTourists || 0;
+      document.getElementById('stat-emergencies').innerText = data.data.totalEmergencies || 0;
+      document.getElementById('stat-blocks').innerText = data.data.blockHeight || 0;
+    }
+  } catch(e) { console.error("Stats error", e); }
+}
+
+async function registerTourist() {
+  const btn = document.querySelector('button[onclick="registerTourist()"]');
+  const originalText = btn.innerText;
+  btn.innerText = "Processing...";
+  btn.disabled = true;
+
+  const payload = {
+    name: document.getElementById('reg-name').value,
+    phone: document.getElementById('reg-phone').value,
+    nationality: "Indian" // simplified for MVP
+  };
+
+  try {
+    const res = await fetch(`${API_URL}/registerTourist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    
+    if(data.success) {
+      document.getElementById('reg-result').classList.remove('hidden');
+      document.getElementById('reg-result').innerHTML = 
+        `✅ Registered! ID: <b>${data.data.touristId}</b><br>Hash: <span class="text-xs">${data.data.blockchainHash.substring(0,20)}...</span>`;
+      currentTouristId = data.data.touristId; // Auto-select for tracking
+      fetchStats(); // Refresh counters
+    }
+  } catch(e) { alert("Registration Failed"); }
+  
+  btn.innerText = originalText;
+  btn.disabled = false;
+}
+
+// --- TRACKING FUNCTIONS ---
+function initMap() {
+  if(map) return;
+  map = L.map('map').setView([26.1445, 91.7362], 13); // Default to Guwahati
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+}
+
+function toggleTracking() {
+  const btn = document.getElementById('track-btn');
+  const status = document.getElementById('track-status');
+  
+  if(trackingInterval) {
+    clearInterval(trackingInterval);
+    trackingInterval = null;
+    btn.innerText = "Start Tracking";
+    btn.classList.replace('bg-red-600', 'bg-green-600');
+    status.innerText = "Offline";
+  } else {
+    if(!currentTouristId) { alert("Register a tourist first to track!"); return; }
+    
+    btn.innerText = "Stop Tracking";
+    btn.classList.replace('bg-green-600', 'bg-red-600');
+    status.innerText = "Live (Sending Data to AI...)";
+    
+    trackingInterval = setInterval(() => {
+      // Simulate movement for demo if not moving
+      const lat = 26.1445 + (Math.random() * 0.01);
+      const lng = 91.7362 + (Math.random() * 0.01);
+      updateLocation(lat, lng);
+    }, 3000);
+  }
+}
+
+async function updateLocation(lat, lng) {
+  // 1. Update Map UI
+  if(!marker) marker = L.marker([lat, lng]).addTo(map);
+  else marker.setLatLng([lat, lng]);
+  map.panTo([lat, lng]);
+
+  // 2. Send to Backend AI
+  try {
+    const res = await fetch(`${API_URL}/liveLocation/${currentTouristId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lat, lng })
+    });
+    const data = await res.json();
+    
+    // 3. Update Logs
+    const logList = document.getElementById('log-list');
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="text-blue-600">${new Date().toLocaleTimeString()}</span>: Lat ${lat.toFixed(4)}...`;
+    logList.prepend(li);
+
+    // 4. Update AI Alert Box
+    const aiBox = document.getElementById('ai-alert');
+    if(data.data.riskScore > 0.5) {
+      aiBox.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded font-bold">${data.data.safetyAlert}</div>`;
+    } else {
+      aiBox.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded font-bold">✅ Area Safe (Risk: ${data.data.riskScore})</div>`;
+    }
+
+  } catch(e) { console.error("Tracking Error", e); }
+}
+
+// --- UI TABS ---
+function showTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  document.getElementById(tabId).classList.remove('hidden');
+  
+  document.querySelectorAll('.nav-btn').forEach(el => {
+    el.classList.remove('bg-white', 'text-blue-700', 'shadow-sm');
+    el.classList.add('bg-blue-100', 'text-gray-600');
+  });
+  
+  document.getElementById(`btn-${tabId}`).classList.add('bg-white', 'text-blue-700', 'shadow-sm');
+  document.getElementById(`btn-${tabId}`).classList.remove('bg-blue-100', 'text-gray-600');
+
+  if(tabId === 'tracking') setTimeout(initMap, 200);
+}
+</script>
+
+<!-- Firebase module: only active if you place your config in firebase-config.js -->
+<script type="module">
+  import { firebaseConfig } from './firebase-config.js';
+  if (firebaseConfig) {
+    try {
+      import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js').then(({ initializeApp }) => {
+        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js').then(({ getAuth, GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber }) => {
+          const app = initializeApp(firebaseConfig);
+          const auth = getAuth(app);
+
+          async function googleSignIn() {
+            try {
+              const provider = new GoogleAuthProvider();
+              const result = await signInWithPopup(auth, provider);
+              const user = result.user;
+              onFirebaseLoggedIn(user);
+            } catch (err) {
+              console.error('Google sign-in error', err);
+              alert('Google sign-in failed. Check console.');
+            }
+          }
+
+          function setupRecaptcha() {
+            if (!window._recaptcha) {
+              window._recaptcha = new RecaptchaVerifier('recaptcha-container', { size: 'invisible' }, auth);
+              window._recaptcha.render().catch(() => {});
+            }
+            return window._recaptcha;
+          }
+
+          async function phoneSignIn() {
+            try {
+              const phone = prompt('Enter phone number with country code, e.g. +919876543210');
+              if (!phone) return;
+              const verifier = setupRecaptcha();
+              const confirmationResult = await signInWithPhoneNumber(auth, phone, verifier);
+              const code = prompt('Enter the OTP you received');
+              if (!code) return;
+              const credential = await confirmationResult.confirm(code);
+              onFirebaseLoggedIn(credential.user);
+            } catch (err) {
+              console.error('Phone sign-in error', err);
+              alert('Phone sign-in failed. Check console.');
+            }
+          }
+
+          // Called when Firebase auth succeeds
+          function onFirebaseLoggedIn(user) {
+            // You can pass token to your backend or just show the app
+            document.getElementById('login-page').classList.remove('active');
+            document.getElementById('app-container').classList.remove('hidden');
+            fetchStats();
+            console.log('Logged in via Firebase:', user);
+          }
+
+          // expose functions to global scope
+          window.googleSignIn = googleSignIn;
+          window.phoneSignIn = phoneSignIn;
+          window.onFirebaseLoggedIn = onFirebaseLoggedIn;
+        });
+      });
+    } catch (e) {
+      console.warn('Firebase initialization failed', e);
+    }
+  } else {
+    // hide firebase area to avoid confusion
+    const el = document.getElementById('firebase-login-area');
+    if (el) el.style.display = 'none';
+  }
+</script>
+</body>
+</html>
