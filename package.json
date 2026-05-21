@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "work-start": "node work/suraksha-backend/index.js"
+    "work-start": "node work/suraksha-backend/index.js",
+    "start": "node suraksha-backend/index.js"
   }
 }

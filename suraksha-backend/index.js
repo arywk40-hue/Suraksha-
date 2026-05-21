@@ -128,9 +128,22 @@ app.post('/api/recordEmergency', (req, res) => {
 app.get('/api/stats', (req, res) => {
   try {
     const data = loadData();
-    res.json({ success: true, data: data.system || { totalTourists: 0, totalEmergencies: 0, blockHeight: 0 } });
+    const today = new Date().toDateString();
+    const emergenciesToday = Object.values(data.emergencies || {})
+      .filter(e => new Date(e.timestamp).toDateString() === today).length;
+    const verifiedToday = Object.values(data.tourists || {})
+      .filter(t => new Date(t.registeredAt).toDateString() === today).length;
+    res.json({
+      success: true,
+      data: {
+        ...(data.system || { totalTourists: 0, totalEmergencies: 0, blockHeight: 0 }),
+        emergenciesToday,
+        verifiedToday,
+        lastUpdated: new Date().toISOString()
+      }
+    });
   } catch (e) {
-    res.json({ success: true, data: { totalTourists: 0, totalEmergencies: 0, blockHeight: 0 } });
+    res.json({ success: true, data: { totalTourists: 0, totalEmergencies: 0, blockHeight: 0, emergenciesToday: 0, verifiedToday: 0, lastUpdated: new Date().toISOString() } });
   }
 });
 
@@ -141,10 +154,43 @@ app.get('/api/verifyTourist/:hash', (req, res) => {
     const hash = req.params.hash;
     const match = Object.values(data.tourists).find(t => t.blockchainHash === hash);
     if (!match) return res.status(404).json({ success: false, message: 'Not found' });
-    res.json({ success: true, data: match });
+    res.json({ success: true, data: { ...match, registrationTime: match.registeredAt, source: 'blockchain' } });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
   }
+});
+
+// --- SEND SOS ---
+app.post('/api/sendSOS/:id', (req, res) => {
+  try {
+    const { location } = req.body;
+    const data = loadData();
+    const id = req.params.id;
+    if (!data.tourists[id]) return res.status(404).json({ success: false, message: 'Tourist not found' });
+
+    const emergencyId = 'SOS-' + Date.now();
+    data.emergencies[emergencyId] = {
+      id: emergencyId,
+      type: 'SOS',
+      description: 'SOS alert triggered by tourist',
+      location: location || {},
+      touristId: id,
+      touristName: data.tourists[id].name,
+      status: 'OPEN',
+      timestamp: new Date().toISOString()
+    };
+    data.system.totalEmergencies = (data.system.totalEmergencies || 0) + 1;
+    saveData(data);
+
+    res.json({ success: true, data: { emergencyId, message: 'SOS alert sent. Help is on the way.' } });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// --- LOGOUT ---
+app.post('/api/logout', (req, res) => {
+  res.json({ success: true, message: 'Logged out successfully' });
 });
 
 // --- Start server ---

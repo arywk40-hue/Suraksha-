@@ -1233,10 +1233,8 @@ async function logout() {
       
       await callApi('/logout', { method: 'POST' });
       
-      alert('Logout successful. Redirecting to login page.');
-      
-      // In a real app, this would redirect to the login page
-      window.location.href = '/login.html';
+      alert('Logout successful.');
+      location.reload();
       
     } catch (error) {
       console.error('Logout error:', error);
