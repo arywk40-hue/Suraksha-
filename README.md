@@ -1,148 +1,84 @@
-# 🔐 Suraksha  
+# Suraksha Yatra
 
-> A blockchain-powered solution for secure, transparent, and decentralized data handling.  
-> Built as part of **Smart India Hackathon (SIH)** to ensure trust, security, and scalability in digital systems.  
+Suraksha Yatra is a local full-stack MVP for tourist safety operations. It combines a static control-room frontend with an Express API, JSON persistence, risk scoring for live movement, emergency recording, and a hash-linked audit ledger.
 
-🌐 **Live Demo**: [Suraksha Deployment](https://suraksha-drab.vercel.app/)  
+## What Is Included
 
----
+- Officer login for local MVP access
+- Tourist registration with identity hash generation
+- Blockchain-style audit blocks for registration, location updates, SOS, and emergency status changes
+- Tourist verification by blockchain hash
+- Live tracking simulation and browser geolocation support
+- Risk scoring against time-of-day and configured risk zones
+- Emergency and SOS recording with dispatch statuses
+- Tourist, emergency, and ledger views in the frontend
+- Smoke test covering the end-to-end API workflow
 
-## 📌 Table of Contents  
-- [About the Project](#-about-the-project)  
-- [Features](#-features)  
-- [Tech Stack](#-tech-stack)  
-- [Project Structure](#-project-structure)  
-- [Getting Started](#-getting-started)  
-- [Usage](#-usage)  
-- [Screenshots](#-screenshots)  
-- [Future Scope](#-future-scope)  
-- [Contributors](#-contributors)  
-- [License](#-license)  
+## Project Structure
 
----
-
-## 📖 About the Project  
-
-**Suraksha** is designed to provide a **secure and transparent system** using blockchain technology.  
-It ensures that data integrity is maintained and transactions remain immutable, making it suitable for applications like:  
-- Digital identity verification  
-- Secure medical records  
-- Fraud detection & prevention  
-- Transparent record-keeping  
-
----
-
-## ✨ Features  
-✅ Blockchain-based data verification  
-✅ Immutable transaction storage  
-✅ Lightweight server setup with Node.js  
-✅ Easy-to-deploy frontend (HTML + JS)  
-✅ Scalable and secure architecture  
-
----
-
-## 🛠 Tech Stack  
-
-- **Frontend:** HTML, CSS, JavaScript  
-- **Backend:** Node.js, Express.js  
-- **Blockchain:** Custom implementation in JavaScript  
-- **Deployment:** Vercel  
-
----
-
-## 📂 Project Structure  
-
-```
-Suraksha-/
-├── demo.html                   # Full-featured demo page (standalone)
-├── demo/
-│   └── demo.html               # Demo index (links to root demo.html)
-├── suraksha-backend/           # Primary backend (Express + file-based DB)
-│   ├── index.js                # API server (port 3000)
-│   ├── data.json               # Persistent data store
-│   ├── firebase.json           # Firebase config placeholder
-│   ├── package.json
-│   └── package-lock.json
-├── work/                       # Active development folder
-│   ├── frontend/
-│   │   ├── index.html          # Login + dashboard (Firebase auth)
-│   │   └── firebase-config.js  # Firebase project config
-│   └── suraksha-backend/
-│       ├── index.js            # Backend for work frontend
-│       ├── data.json           # Persistent data store
-│       └── package.json
-├── package.json                # Root scripts (npm run work-start)
-└── README.md
+```text
+.
+|-- frontend/                 # Served control-room UI
+|-- suraksha-backend/         # Express API and JSON data store
+|   |-- index.js              # API server
+|   |-- smoke-test.js         # End-to-end smoke test
+|   `-- data.json             # Local persisted data
+|-- demo.html                 # Older standalone demo
+|-- work/                     # Older working prototype copy
+`-- package.json              # Root scripts
 ```
 
----
+## Quick Start
 
-## 🚀 Getting Started  
-
-### Prerequisites
-- Node.js v16+
-- npm
-
-### Run the working app locally
+Install dependencies:
 
 ```bash
-# Install dependencies
-cd suraksha-backend
-npm install
-
-# Start the server (serves frontend + API on port 3000)
-cd ..
-npm run work-start
+npm install --prefix suraksha-backend
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Run the app:
 
-> **Login:** any username + password will work (mock auth in development mode).
+```bash
+npm start
+```
 
-### Optional: Firebase Authentication
-To enable Google Sign-In and Phone OTP:
-1. Create a project at [Firebase Console](https://console.firebase.google.com/)
-2. Enable **Google** and **Phone** providers under Authentication
-3. Copy your Firebase config into `work/frontend/firebase-config.js`
+Open:
 
----
+```text
+http://localhost:3000
+```
 
-## 📱 Usage  
+Default local login:
 
-| Feature | How to use |
-|---|---|
-| **Register Tourist** | Fill name, phone, nationality → click "Register on Blockchain" |
-| **Verify Identity** | Paste the blockchain hash returned at registration → click "Verify" |
-| **Live Tracking** | Go to "Live Tracking" tab → click "Start Tracking" (browser location required) |
-| **Record Emergency** | Fill emergency type, description, location → click "RECORD EMERGENCY" |
-| **SOS Alert** | On tracking page, click "Send SOS" to trigger an instant alert |
-| **Blockchain Stats** | Auto-refreshed on dashboard; click "Refresh" for manual update |
+```text
+Officer ID: admin
+Password: admin
+```
+## Test
 
----
+```bash
+npm test
+```
 
-## 🖼 Screenshots  
+The smoke test starts the Express app on a temporary local port, registers a tourist, verifies the generated hash, posts a location update, records an emergency, checks stats, checks the audit ledger, and confirms the frontend is served.
 
-Visit the [Live Demo](https://suraksha-drab.vercel.app/) to see the app in action.
+## API Summary
 
----
+- `GET /api/health`
+- `POST /api/login`
+- `POST /api/registerTourist`
+- `GET /api/tourists`
+- `GET /api/tourists/:id`
+- `GET /api/verifyTourist/:hash`
+- `POST /api/liveLocation/:id`
+- `POST /api/recordEmergency`
+- `POST /api/sendSOS/:id`
+- `GET /api/emergencies`
+- `PATCH /api/emergencies/:id`
+- `GET /api/stats`
+- `GET /api/audit`
+- `GET /api/risk-zones`
 
-## 🔭 Future Scope  
+## Notes
 
-- 🔗 Integration with Ethereum / Hyperledger for real blockchain immutability  
-- 📲 Mobile app (React Native) with push notifications  
-- 🗺 Heatmap of tourist density & risk zones  
-- 🤖 AI-based risk scoring using historical crime data  
-- 🏛 Integration with government identity APIs (Aadhaar, DigiLocker)  
-- 📡 Offline-capable PWA for low-connectivity areas  
-
----
-
-## 👥 Contributors  
-
-Built with ❤️ for **Smart India Hackathon (SIH)**
-
----
-
-## 📄 License  
-
-This project is licensed under the [MIT License](LICENSE).
+This is a complete local MVP, not a production security backend. For production, replace the local JSON store with a database, add real authentication and authorization, secure emergency notification delivery, and move the audit ledger to a tamper-resistant store or blockchain network.

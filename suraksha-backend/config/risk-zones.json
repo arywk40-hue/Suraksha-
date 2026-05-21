@@ -1,0 +1,26 @@
+[
+  {
+    "id": "fancy-bazaar",
+    "name": "Fancy Bazaar crowd zone",
+    "lat": 26.1826,
+    "lng": 91.7416,
+    "radiusKm": 1.4,
+    "weight": 0.34
+  },
+  {
+    "id": "sonapur-corridor",
+    "name": "Sonapur late travel corridor",
+    "lat": 26.1195,
+    "lng": 91.9693,
+    "radiusKm": 3.5,
+    "weight": 0.28
+  },
+  {
+    "id": "river-front",
+    "name": "Brahmaputra riverfront watch area",
+    "lat": 26.1901,
+    "lng": 91.7529,
+    "radiusKm": 1.8,
+    "weight": 0.22
+  }
+]
