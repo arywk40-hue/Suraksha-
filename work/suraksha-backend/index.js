@@ -161,7 +161,7 @@ app.post('/api/sendSOS/:id', (req, res) => {
     const id = req.params.id;
     if (!data.tourists[id]) return res.status(404).json({ success: false, message: 'Tourist not found' });
 
-    const emergencyId = 'SOS-' + Date.now();
+    const emergencyId = 'SOS-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
     data.emergencies[emergencyId] = {
       id: emergencyId,
       type: 'SOS',
