@@ -5,7 +5,6 @@
   "scripts": {
     "start": "npm --prefix suraksha-backend start",
     "dev": "npm --prefix suraksha-backend run dev",
-    "test": "npm --prefix suraksha-backend test",
-    "work-start": "node work/suraksha-backend/index.js"
+    "test": "npm --prefix suraksha-backend test"
   }
 }

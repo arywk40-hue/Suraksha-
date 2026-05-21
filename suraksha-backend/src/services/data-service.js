@@ -51,6 +51,7 @@ function sortNewest(items, field = 'timestamp') {
 
 function publicTourist(tourist, config) {
   if (!tourist) return null;
+  const defaultRiskLevel = config.risk.defaultLevel;
   return {
     id: tourist.id,
     name: tourist.name,
@@ -64,7 +65,7 @@ function publicTourist(tourist, config) {
     registrationTime: tourist.registeredAt,
     lastLocation: tourist.lastLocation || null,
     currentRisk: tourist.currentRisk || 0,
-    riskLevel: tourist.riskLevel || 'LOW',
+    riskLevel: tourist.riskLevel || defaultRiskLevel,
     lastUpdated: tourist.lastUpdated || tourist.registeredAt,
     source: config.ledger.sourceLabel
   };

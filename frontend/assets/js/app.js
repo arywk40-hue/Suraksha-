@@ -11,7 +11,8 @@ const state = {
   touristMarker: null,
   zoneLayers: [],
   trackingTimer: null,
-  lastLocation: null
+  lastLocation: null,
+  socket: null
 };
 
 const $ = (id) => document.getElementById(id);
@@ -89,6 +90,7 @@ async function loadPublicConfig() {
   state.config = await api('/config');
   state.lastLocation = state.config.defaults.mapCenter;
   document.title = state.config.appName;
+  setText('loginMode', titleCase(state.config.environment));
   populateConfigOptions();
   applyLocationPlaceholders();
 }
@@ -127,11 +129,13 @@ function showApp() {
   $('loginView').classList.add('hidden');
   $('appView').classList.remove('hidden');
   setText('userName', state.user?.name || 'Officer');
+  connectSocket();
 }
 
 function showLogin() {
   $('loginView').classList.remove('hidden');
   $('appView').classList.add('hidden');
+  disconnectSocket();
 }
 
 function setView(viewName) {
@@ -252,9 +256,10 @@ function renderTourists() {
   `).join('');
 }
 
-function riskBadge(level = 'LOW', score = 0) {
-  const normalized = String(level || 'LOW').toUpperCase();
-  const className = normalized === 'HIGH' ? 'danger' : normalized === 'MEDIUM' ? 'warn' : 'ok';
+function riskBadge(level, score = 0) {
+  const riskLevels = state.config?.risk?.levels || {};
+  const normalized = String(level || state.config?.risk?.defaultLevel || '').toUpperCase();
+  const className = normalized === riskLevels.high ? 'danger' : normalized === riskLevels.medium ? 'warn' : 'ok';
   return `<span class="status-chip ${className}">${normalized} ${Math.round((score || 0) * 100)}%</span>`;
 }
 
@@ -442,7 +447,8 @@ function renderRisk(data) {
   const pct = Math.round(data.riskScore * 100);
   const fill = $('riskFill');
   fill.style.width = `${pct}%`;
-  fill.style.background = data.riskLevel === 'HIGH' ? '#b91c1c' : data.riskLevel === 'MEDIUM' ? '#b45309' : '#047857';
+  const riskLevels = state.config?.risk?.levels || {};
+  fill.style.background = data.riskLevel === riskLevels.high ? '#b91c1c' : data.riskLevel === riskLevels.medium ? '#b45309' : '#047857';
   setText('riskLevel', `${data.riskLevel} ${pct}%`);
   setText('riskMessage', data.safetyAlert);
 }
@@ -531,6 +537,40 @@ function useHashFromTable(event) {
   $('verifyHash').value = button.dataset.copyHash;
   setView('dashboard');
   toast('Hash loaded into verification.');
+}
+
+function connectSocket() {
+  if (!window.io || state.socket) return;
+
+  state.socket = window.io({
+    auth: {
+      token: state.token
+    }
+  });
+
+  state.socket.on('connect', () => {
+    state.socket.emit('join:officer');
+  });
+
+  state.socket.on('location:update', (payload) => {
+    renderRisk(payload);
+    addTrackingLog(`${payload.riskLevel} risk at ${payload.location.lat}, ${payload.location.lng}`);
+  });
+
+  state.socket.on('sos:alert', (payload) => {
+    toast(`SOS recorded: ${payload.emergencyId}`);
+    loadAll();
+  });
+
+  state.socket.on('emergency:update', () => {
+    loadAll();
+  });
+}
+
+function disconnectSocket() {
+  if (!state.socket) return;
+  state.socket.disconnect();
+  state.socket = null;
 }
 
 function bindEvents() {

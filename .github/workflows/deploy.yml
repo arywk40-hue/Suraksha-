@@ -1,0 +1,52 @@
+name: Suraksha CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: suraksha-backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci --prefix suraksha-backend
+
+      - name: Run backend smoke test
+        run: npm test
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --prefix suraksha-backend
+
+      - name: Secret scan
+        run: |
+          if rg -n --glob '*.js' --glob '*.json' --glob '*.env' --glob '!**/*.example' --glob '!**/package-lock.json' '(mongodb\+srv://[^<]|JWT_SECRET=.+[A-Za-z0-9]|TWILIO_AUTH_TOKEN=.+[A-Za-z0-9]|PINATA_JWT=.+[A-Za-z0-9]|SURAKSHA_OFFICER_PASSWORD=.+[A-Za-z0-9])' .; then
+            echo "Potential secret found in tracked source."
+            exit 1
+          fi
+
+  deploy-railway:
+    needs: verify
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    env:
+      RAILWAY_DEPLOY_HOOK_URL: ${{ secrets.RAILWAY_DEPLOY_HOOK_URL }}
+    steps:
+      - name: Trigger Railway deploy hook
+        run: |
+          if [ -n "$RAILWAY_DEPLOY_HOOK_URL" ]; then
+            curl -fsS -X POST "$RAILWAY_DEPLOY_HOOK_URL"
+          else
+            echo "RAILWAY_DEPLOY_HOOK_URL is not configured; skipping deploy hook."
+          fi

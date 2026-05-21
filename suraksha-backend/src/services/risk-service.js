@@ -16,9 +16,9 @@ function distanceKm(from, to) {
 }
 
 function riskLevel(score, config) {
-  if (score >= config.risk.highThreshold) return 'HIGH';
-  if (score >= config.risk.mediumThreshold) return 'MEDIUM';
-  return 'LOW';
+  if (score >= config.risk.highThreshold) return config.risk.levels.high;
+  if (score >= config.risk.mediumThreshold) return config.risk.levels.medium;
+  return config.risk.levels.low;
 }
 
 function computeRisk(location, config, riskZones = [], date = new Date()) {

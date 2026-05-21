@@ -29,6 +29,11 @@ function loadOfficers(options = {}, authConfig = {}) {
     return readJson(resolveBackendPath(process.env.SURAKSHA_OFFICERS_FILE), []);
   }
 
+  const localOfficersFile = path.join(backendRoot, 'config', 'officers.json');
+  if (fs.existsSync(localOfficersFile)) {
+    return readJson(localOfficersFile, []);
+  }
+
   if (process.env.SURAKSHA_OFFICER_ID && process.env.SURAKSHA_OFFICER_PASSWORD) {
     return [
       {
@@ -57,7 +62,13 @@ function loadConfig(options = {}) {
       frontendDir: options.frontendDir || process.env.SURAKSHA_FRONTEND_DIR || path.join(projectRoot, 'frontend')
     },
     officers: loadOfficers(options, appConfig.auth),
-    riskZones: readJson(riskZonesFile, [])
+    riskZones: readJson(riskZonesFile, []),
+    env: {
+      isProduction: process.env.NODE_ENV === 'production',
+      frontendUrl: process.env.FRONTEND_URL || '',
+      mongoUri: options.mongoUri || process.env.MONGO_URI || '',
+      logLevel: process.env.LOG_LEVEL || 'info'
+    }
   };
 }
 

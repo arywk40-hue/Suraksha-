@@ -8,10 +8,10 @@ class JsonStore {
     this.ensureDataShape = ensureDataShape;
   }
 
-  read() {
+  async read() {
     if (!fs.existsSync(this.dataFile)) {
       const initial = this.createInitialData();
-      this.write(initial);
+      await this.write(initial);
       return initial;
     }
 
@@ -21,12 +21,12 @@ class JsonStore {
       const backupFile = `${this.dataFile}.corrupt-${Date.now()}`;
       fs.copyFileSync(this.dataFile, backupFile);
       const initial = this.createInitialData();
-      this.write(initial);
+      await this.write(initial);
       throw new Error(`Data file was corrupt. Backed up to ${backupFile}`);
     }
   }
 
-  write(data) {
+  async write(data) {
     fs.mkdirSync(path.dirname(this.dataFile), { recursive: true });
     fs.writeFileSync(this.dataFile, JSON.stringify(data, null, 2));
   }

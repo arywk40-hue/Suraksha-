@@ -7,8 +7,8 @@
     "file": "data/data.json"
   },
   "auth": {
-    "tokenPrefix": "local",
-    "defaultRole": "control-room"
+    "defaultRole": "control-room",
+    "tokenExpiry": "8h"
   },
   "ids": {
     "touristPrefix": "TY",
@@ -35,6 +35,12 @@
     "minimumEmergencyDescriptionLength": 8
   },
   "risk": {
+    "defaultLevel": "LOW",
+    "levels": {
+      "low": "LOW",
+      "medium": "MEDIUM",
+      "high": "HIGH"
+    },
     "baseScore": 0.12,
     "maxScore": 0.95,
     "mediumThreshold": 0.4,
@@ -63,7 +69,16 @@
     "nationalities": ["Indian", "Other"],
     "emergencyTypes": ["MEDICAL", "THEFT", "HARASSMENT", "ACCIDENT", "LOST"],
     "emergencyStatuses": ["OPEN", "ACKNOWLEDGED", "RESOLVED"],
+    "terminalEmergencyStatus": "RESOLVED",
+    "sosType": "SOS",
+    "sosDescription": "SOS alert triggered from live tracking.",
+    "emergencyRecordedMessage": "Emergency recorded and available for dispatch review.",
     "trackingIntervalMs": 4500,
     "simulationStep": 0.004
+  },
+  "rateLimit": {
+    "windowMs": 60000,
+    "loginMax": 10,
+    "apiMax": 120
   }
 }

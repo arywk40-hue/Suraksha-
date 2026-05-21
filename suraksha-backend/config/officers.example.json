@@ -1,7 +1,7 @@
 [
   {
     "username": "replace-with-officer-id",
-    "password": "replace-with-secure-password",
+    "passwordHash": "replace-with-bcrypt-hash",
     "name": "Officer Name",
     "role": "control-room"
   }

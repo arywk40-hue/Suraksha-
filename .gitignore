@@ -1,4 +1,8 @@
 node_modules/
+.env/
+*.env
+suraksha-backend/.env
+suraksha-backend/config/officers.json
 npm-debug.log*
 .DS_Store
 *.log

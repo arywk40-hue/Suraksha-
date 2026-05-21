@@ -4,10 +4,6 @@ function hashPayload(payload) {
   return crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex');
 }
 
-function createToken(prefix) {
-  return `${prefix}-${crypto.randomUUID()}`;
-}
-
 function generateId(prefix, collection) {
   let id = '';
   do {
@@ -17,7 +13,6 @@ function generateId(prefix, collection) {
 }
 
 module.exports = {
-  createToken,
   generateId,
   hashPayload
 };

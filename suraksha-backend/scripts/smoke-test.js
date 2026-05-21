@@ -3,6 +3,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
+process.env.LOG_LEVEL = process.env.LOG_LEVEL || 'silent';
+
 const { createApp } = require('../src/app');
 
 async function request(baseUrl, endpoint, options = {}) {
@@ -50,9 +52,11 @@ async function run() {
       body: JSON.stringify({ username: 'smoke-officer', password: 'smoke-password' })
     });
     assert.ok(login.token);
+    const authHeaders = { Authorization: `Bearer ${login.token}` };
 
     const registration = await request(baseUrl, '/api/registerTourist', {
       method: 'POST',
+      headers: authHeaders,
       body: JSON.stringify({
         name: 'Smoke Test Tourist',
         phone: '+919876543210',
@@ -64,11 +68,14 @@ async function run() {
     assert.ok(registration.touristId);
     assert.ok(registration.blockchainHash);
 
-    const verified = await request(baseUrl, `/api/verifyTourist/${registration.blockchainHash}`);
+    const verified = await request(baseUrl, `/api/verifyTourist/${registration.blockchainHash}`, {
+      headers: authHeaders
+    });
     assert.equal(verified.name, 'Smoke Test Tourist');
 
     const location = await request(baseUrl, `/api/liveLocation/${registration.touristId}`, {
       method: 'POST',
+      headers: authHeaders,
       body: JSON.stringify({ lat: 26.1826, lng: 91.7416 })
     });
     assert.ok(location.riskScore > 0);
@@ -76,6 +83,7 @@ async function run() {
 
     const emergency = await request(baseUrl, '/api/recordEmergency', {
       method: 'POST',
+      headers: authHeaders,
       body: JSON.stringify({
         touristId: registration.touristId,
         emergencyType: 'MEDICAL',
@@ -85,18 +93,22 @@ async function run() {
     });
     assert.ok(emergency.emergencyId);
 
-    const stats = await request(baseUrl, '/api/stats');
+    const stats = await request(baseUrl, '/api/stats', {
+      headers: authHeaders
+    });
     assert.equal(stats.totalTourists, 1);
     assert.equal(stats.totalEmergencies, 1);
     assert.ok(stats.blockHeight >= 3);
 
-    const audit = await request(baseUrl, '/api/audit');
+    const audit = await request(baseUrl, '/api/audit', {
+      headers: authHeaders
+    });
     assert.ok(audit.length >= 3);
 
     const html = await fetch(baseUrl).then((response) => response.text());
     assert.match(html, /Suraksha Yatra/);
 
-    console.log('Smoke test passed.');
+    process.stdout.write('Smoke test passed.\n');
   } finally {
     await new Promise((resolve) => server.close(resolve));
     fs.rmSync(tempDir, { recursive: true, force: true });
@@ -104,6 +116,6 @@ async function run() {
 }
 
 run().catch((error) => {
-  console.error(error);
+  process.stderr.write(`${error.stack || error.message}\n`);
   process.exit(1);
 });

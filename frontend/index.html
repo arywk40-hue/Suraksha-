@@ -43,7 +43,7 @@
       </div>
       <div>
         <p class="eyebrow">Mode</p>
-        <strong>Local MVP</strong>
+        <strong id="loginMode">Checking</strong>
       </div>
     </div>
   </section>
@@ -232,7 +232,7 @@
           <aside class="panel">
             <div class="panel-header">
               <h4>Risk Assessment</h4>
-              <span id="riskLevel">LOW</span>
+              <span id="riskLevel">--</span>
             </div>
             <div class="risk-meter">
               <div id="riskFill"></div>
@@ -289,6 +289,7 @@
   <div id="toast" class="toast" hidden></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
   <script src="./assets/js/app.js"></script>
 </body>
 </html>

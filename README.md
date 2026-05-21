@@ -1,71 +1,92 @@
 # Suraksha Yatra
 
-Suraksha Yatra is a local full-stack MVP for tourist safety operations. It combines a static control-room frontend with an Express API, JSON persistence, risk scoring for live movement, emergency recording, and a hash-linked audit ledger.
-
-## What Is Included
-
-- Officer login for local MVP access
-- Tourist registration with identity hash generation
-- Blockchain-style audit blocks for registration, location updates, SOS, and emergency status changes
-- Tourist verification by blockchain hash
-- Live tracking simulation and browser geolocation support
-- Risk scoring against time-of-day and configured risk zones
-- Emergency and SOS recording with dispatch statuses
-- Tourist, emergency, and ledger views in the frontend
-- Smoke test covering the end-to-end API workflow
+Suraksha Yatra is a tourist-safety control room app with a static frontend, an Express API, JWT officer sessions, configurable risk scoring, emergency workflows, a hash-linked audit ledger, optional MongoDB persistence, optional IPFS anchoring, realtime Socket.IO events, Redis-backed caching, and Twilio SOS notification hooks.
 
 ## Project Structure
 
 ```text
 .
-|-- frontend/                 # Served control-room UI
-|-- suraksha-backend/         # Express API and JSON data store
-|   |-- index.js              # API server
-|   |-- smoke-test.js         # End-to-end smoke test
-|   `-- data.json             # Local persisted data
-|-- demo.html                 # Older standalone demo
-|-- work/                     # Older working prototype copy
-`-- package.json              # Root scripts
+|-- frontend/                    # Static control-room UI
+|   `-- assets/                  # Browser CSS and JS
+|-- suraksha-backend/            # Express API
+|   |-- config/                  # App, officer example, and risk-zone config
+|   |-- data/                    # Local JSON fallback store
+|   |-- scripts/                 # Smoke tests
+|   |-- src/
+|   |   |-- db/                  # MongoDB connection and models
+|   |   |-- middleware/          # Auth, validation, async helpers
+|   |   |-- routes/              # API routes
+|   |   |-- services/            # Auth, ledger, alerts, risk, data logic
+|   |   |-- store/               # JSON and Mongo store adapters
+|   |   `-- utils/               # Logging, cache, hash, validation helpers
+|   |-- Dockerfile
+|   `-- railway.json
+|-- contracts/                   # Polygon audit registry contract
+|-- docker-compose.yml
+|-- vercel.json
+|-- build.md                     # Production roadmap
+`-- package.json                 # Root scripts
 ```
 
 ## Quick Start
 
-Install dependencies:
-
 ```bash
 npm install --prefix suraksha-backend
+cp suraksha-backend/.env.example suraksha-backend/.env
+cp suraksha-backend/config/officers.example.json suraksha-backend/config/officers.json
 ```
 
-Run the app:
+Create a bcrypt password hash:
+
+```bash
+node -e "const bcrypt=require('./suraksha-backend/node_modules/bcryptjs'); process.stdout.write(bcrypt.hashSync('replace-this-password', 12) + '\n');"
+```
+
+Put that hash in `suraksha-backend/config/officers.json`, set `JWT_SECRET` in `suraksha-backend/.env`, then run:
 
 ```bash
 npm start
 ```
 
-Open:
+Open `http://localhost:3000`.
 
-```text
-http://localhost:3000
-```
+## Environment
 
-Default local login:
+Required for production:
 
-```text
-Officer ID: admin
-Password: admin
-```
+- `JWT_SECRET`
+- `MONGO_URI`
+- `FRONTEND_URL`
+- `SURAKSHA_OFFICER_ID` and `SURAKSHA_OFFICER_PASSWORD`, or `SURAKSHA_OFFICERS_FILE`
+
+Optional integrations:
+
+- `PINATA_JWT` or `PINATA_API_KEY` plus `PINATA_SECRET_KEY` for IPFS audit anchoring
+- `UPSTASH_REDIS_URL` for stats caching
+- `TWILIO_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` for SOS SMS alerts
+- `POLYGON_RPC_URL`, `POLYGON_PRIVATE_KEY`, `POLYGON_REGISTRY_ADDRESS` for the Polygon registry deployment flow
+
+If `MONGO_URI` is omitted, the backend uses `suraksha-backend/data/data.json` for local development.
+
 ## Test
 
 ```bash
 npm test
 ```
 
-The smoke test starts the Express app on a temporary local port, registers a tourist, verifies the generated hash, posts a location update, records an emergency, checks stats, checks the audit ledger, and confirms the frontend is served.
+The smoke test starts the backend on a temporary port, logs in, registers a tourist, verifies the hash, posts live location, records an emergency, reads stats and audit blocks, and checks the frontend.
 
-## API Summary
+## API
+
+Public:
 
 - `GET /api/health`
+- `GET /api/config`
 - `POST /api/login`
+- `POST /api/logout`
+
+Protected with `Authorization: Bearer <token>`:
+
 - `POST /api/registerTourist`
 - `GET /api/tourists`
 - `GET /api/tourists/:id`
@@ -79,6 +100,19 @@ The smoke test starts the Express app on a temporary local port, registers a tou
 - `GET /api/audit`
 - `GET /api/risk-zones`
 
-## Notes
+## Deployment
 
-This is a complete local MVP, not a production security backend. For production, replace the local JSON store with a database, add real authentication and authorization, secure emergency notification delivery, and move the audit ledger to a tamper-resistant store or blockchain network.
+Backend:
+
+- Deploy `suraksha-backend/` to Railway.
+- Configure the variables from `suraksha-backend/.env.example`.
+- Use the included `Dockerfile` and `railway.json`.
+
+Frontend:
+
+- Deploy the repo root to Vercel.
+- Update the two Railway destinations in `vercel.json` to the real backend URL after Railway assigns one.
+
+CI:
+
+- `.github/workflows/deploy.yml` installs dependencies, runs the smoke test, audits production dependencies, scans tracked source for obvious secrets, and can trigger Railway with `RAILWAY_DEPLOY_HOOK_URL`.
